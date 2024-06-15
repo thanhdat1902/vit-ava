@@ -25,7 +25,6 @@ lr_config = dict(
 
 total_epochs = 4
 target_type = 'GaussianHeatmap'
-data_root = '/home/ubuntu/test/dataset'
 
 data_cfg = dict(
     image_size=[192, 256],
@@ -36,9 +35,11 @@ data_cfg = dict(
     vis_thr=0.2,
     use_gt_bbox=False,
     det_bbox_thr=0.0,
-    bbox_file=f'{data_root}/val_xworld.json',
+    bbox_file='data/coco/person_detection_results/'
+    'COCO_val2017_detections_AP_H_56_person.json',
 )
 
+data_root = '/home/ubuntu/test/dataset'
 data = dict(
     samples_per_gpu=64,
     workers_per_gpu=6,

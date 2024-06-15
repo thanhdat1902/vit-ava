@@ -97,7 +97,7 @@ class COCODataset(Dataset):
 
         # Image & annotation path
         self.data_path = f"{root_path}/{data_version}"
-        self.annotation_path = f"{root_path}/annotations/person_keypoints_{data_version}.json"
+        self.annotation_path = f"{root_path}/annotations/keypoints_{data_version}.json"
 
         self.image_size = (image_width, image_height)
         self.aspect_ratio = image_width * 1.0 / image_height
@@ -106,18 +106,15 @@ class COCODataset(Dataset):
         self.heatmap_type = 'gaussian'
         self.pixel_std = 200  # I don't understand the meaning of pixel_std (=200) in the original implementation
 
-        self.num_joints = 25
-        self.num_joints_half_body = 15
+        self.num_joints = 65
+        self.num_joints_half_body = 21
 
         # eye, ear, shoulder, elbow, wrist, hip, knee, ankle
         self.flip_pairs = [[1, 2], [3, 4], [6, 7], [8, 9], [10, 11], [12, 13],
                            [15, 16], [17, 18], [19, 22], [20, 23], [21, 24]]
-        self.upper_body_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-        self.lower_body_ids = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
-        self.joints_weight = np.array([1., 1., 1., 1., 1., 1., 1., 1., 1.2, 1.2,
-                                       1.5, 1.5, 1., 1., 1., 1.2, 1.2, 1.5, 1.5,
-                                       1.5, 1.5, 1.5, 1.5, 1.5,
-                                       1.5]).reshape((self.num_joints, 1))
+        self.upper_body_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54]
+        self.lower_body_ids = [21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64]
+        self.joints_weight = np.array([1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]).reshape((self.num_joints, 1))
 
         self.transform = transforms.Compose([
             transforms.ToTensor(),
@@ -169,7 +166,7 @@ class COCODataset(Dataset):
                         continue
 
                     # ignore objs without keypoints annotation
-                    if max(obj['keypoints']) == 0 and max(obj['foot_kpts']) == 0:
+                    if max(obj['keypoints']) == 0:
                         continue
 
                     x, y, w, h = obj['bbox']
@@ -190,11 +187,11 @@ class COCODataset(Dataset):
 
             # for each annotation of this image, add the formatted annotation to self.data
             for obj in objs:
-                joints = np.zeros((self.num_joints, 2), dtype=np.float)
-                joints_visibility = np.ones((self.num_joints, 2), dtype=np.float)
+                joints = np.zeros((self.num_joints, 2), dtype=float)
+                joints_visibility = np.ones((self.num_joints, 2), dtype=float)
 
                 # Add foot data to keypoints
-                obj['keypoints'].extend(obj['foot_kpts'])
+                # obj['keypoints'].extend(obj['foot_kpts'])
 
                 if self.use_gt_bboxes:
                     """ COCO pre-processing

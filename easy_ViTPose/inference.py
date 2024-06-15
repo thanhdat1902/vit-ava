@@ -9,13 +9,13 @@ import torch
 
 from ultralytics import YOLO
 
-from .configs.ViTPose_common import data_cfg
-from .sort import Sort
-from .vit_models.model import ViTPose
-from .vit_utils.inference import draw_bboxes, pad_image
-from .vit_utils.top_down_eval import keypoints_from_heatmaps
-from .vit_utils.util import dyn_model_import, infer_dataset_by_path
-from .vit_utils.visualization import draw_points_and_skeleton, joints_dict
+from configs.ViTPose_common import data_cfg
+from sort import Sort
+from vit_models.model import ViTPose
+from vit_utils.inference import draw_bboxes, pad_image
+from vit_utils.top_down_eval import keypoints_from_heatmaps
+from vit_utils.util import dyn_model_import, infer_dataset_by_path
+from vit_utils.visualization import draw_points_and_skeleton, joints_dict
 
 try:
     import torch_tensorrt
@@ -124,7 +124,7 @@ class VitInference:
         if dataset is None:
             dataset = infer_dataset_by_path(model)
 
-        assert dataset in ['mpii', 'coco', 'coco_25', 'wholebody', 'aic', 'ap10k', 'apt36k'], \
+        assert dataset in ['mpii', 'coco', 'coco_25', 'wholebody', 'aic', 'ap10k', 'apt36k','coco_65'], \
             'The specified dataset is not valid'
 
         # Dataset can now be set for visualization
@@ -247,6 +247,7 @@ class VitInference:
             res_pd = self.tracker.update(res_pd)
             ids = res_pd[:, 5].astype(int).tolist()
 
+
         # Prepare boxes for inference
         bboxes = res_pd[:, :4].round().astype(int)
         scores = res_pd[:, 4].tolist()
@@ -254,12 +255,15 @@ class VitInference:
 
         if ids is None:
             ids = range(len(bboxes))
-
+        print(res_pd[:, :4])
         for bbox, id in zip(bboxes, ids):
+            print(bbox)
+
             # TODO: Slightly bigger bbox
             bbox[[0, 2]] = np.clip(bbox[[0, 2]] + [-pad_bbox, pad_bbox], 0, img.shape[1])
             bbox[[1, 3]] = np.clip(bbox[[1, 3]] + [-pad_bbox, pad_bbox], 0, img.shape[0])
-
+            print("============================")
+            print(bbox)
             # Crop image and pad to 3/4 aspect ratio
             img_inf = img[bbox[1]:bbox[3], bbox[0]:bbox[2]]
             img_inf, (left_pad, top_pad) = pad_image(img_inf, 3 / 4)
@@ -275,7 +279,7 @@ class VitInference:
             self._tracker_res = (bboxes, ids, scores)
             self._keypoints = frame_keypoints
 
-        return frame_keypoints
+        return frame_keypoints, bboxes
 
     def draw(self, show_yolo=True, show_raw_yolo=False, confidence_threshold=0.5):
         """
@@ -298,14 +302,14 @@ class VitInference:
             img = draw_bboxes(img, bboxes, ids, scores)
 
         img = np.array(img)[..., ::-1]  # RGB to BGR for cv2 modules
-        for idx, k in self._keypoints.items():
-            img = draw_points_and_skeleton(img.copy(), k,
-                                           joints_dict()[self.dataset]['skeleton'],
-                                           person_index=idx,
-                                           points_color_palette='gist_rainbow',
-                                           skeleton_color_palette='jet',
-                                           points_palette_samples=10,
-                                           confidence_threshold=confidence_threshold)
+        # for idx, k in self._keypoints.items():
+            # img = draw_points_and_skeleton(img.copy(), k,
+            #                                joints_dict()[self.dataset]['skeleton'],
+            #                                person_index=idx,
+            #                                points_color_palette='gist_rainbow',
+            #                                skeleton_color_palette='jet',
+            #                                points_palette_samples=10,
+            #                                confidence_threshold=confidence_threshold)
         return img[..., ::-1]  # Return RGB as original
 
     def pre_img(self, img):

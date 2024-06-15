@@ -17,10 +17,10 @@ from vit_utils.util import init_random_seed, set_random_seed
 from vit_utils.dist_util import get_dist_info, init_dist
 from vit_utils.logging import get_root_logger
 
-import configs.ViTPose_small_coco_256x192 as s_cfg
+# import configs.ViTPose_small_coco_256x192 as s_cfg
 import configs.ViTPose_base_coco_256x192 as b_cfg
-import configs.ViTPose_large_coco_256x192 as l_cfg
-import configs.ViTPose_huge_coco_256x192 as h_cfg
+# import configs.ViTPose_large_coco_256x192 as l_cfg
+# import configs.ViTPose_huge_coco_256x192 as h_cfg
 
 from vit_models.model import ViTPose
 from datasets.COCO import COCODataset
@@ -31,12 +31,10 @@ CUR_PATH = osp.dirname(__file__)
 @click.command()
 @click.option('--config-path', type=click.Path(exists=True), default='config.yaml', required=True, help='train config file path')
 @click.option('--model-name', type=str, default='b', required=True, help='[b: ViT-B, l: ViT-L, h: ViT-H]')
+
 def main(config_path, model_name):
         
-    cfg = {'b':b_cfg,
-           's':s_cfg,
-           'l':l_cfg,
-           'h':h_cfg}.get(model_name.lower())
+    cfg = {'b':b_cfg}.get(model_name.lower())
     # Load config.yaml
     with open(config_path, 'r') as f:
         cfg_yaml = yaml.load(f, Loader=yaml.SafeLoader)
@@ -120,11 +118,12 @@ def main(config_path, model_name):
         model.backbone.freeze_ffn = True
         model.backbone.freeze_attn = True
         model.backbone._freeze_stages()
-    
+    print(model)
+
     # Set dataset
     datasets_train = COCODataset(
         root_path=cfg.data_root, 
-        data_version="feet_train",
+        data_version="train_xworld",
         is_train=True, 
         use_gt_bboxes=True,
         image_width=192, 
@@ -142,7 +141,7 @@ def main(config_path, model_name):
     
     datasets_valid = COCODataset(
         root_path=cfg.data_root, 
-        data_version="feet_val",
+        data_version="val_xworld",
         is_train=False, 
         use_gt_bboxes=True,
         image_width=192, 
